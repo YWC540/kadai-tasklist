@@ -15,7 +15,9 @@ use App\Http\Controllers\TasksController;
 |
 */
 
-Route::get('/', [TasksController::class, 'index']);
+Route::get('/', function () {
+    return view('dashboard');
+});
 Route::resource('tasks', TasksController::class);
 
 Route::get('/dashboard', [MicropostsController::class, 'index'])->middleware(['auth'])->name('dashboard');
