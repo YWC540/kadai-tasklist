@@ -13,13 +13,26 @@ class TasksController extends Controller
      */
     public function index()
     {
-        // メッセージ一覧を取得
-        $tasks = Task::all();         // 追加
+        $data = [];
+        if (\Auth::check()) { // 認証済みの場合
+            // 認証済みユーザーを取得
+            $userId = \Auth::id();
+            // メッセージ一覧を取得
+            $tasks = Task::where('user_id', $userId)->get();         // 追加
 
-        // メッセージ一覧ビューでそれを表示
-        return view('tasks.index', [     // 追加
+            // メッセージ一覧ビューでそれを表示
+            return view('tasks.index', [     // 追加
             'tasks' => $tasks,        // 追加
-        ]);                                 // 追加
+            ]);                                 // 追加
+        }
+
+        // // メッセージ一覧を取得
+        // $tasks = Task::all();         // 追加
+
+        // // メッセージ一覧ビューでそれを表示
+        // return view('tasks.index', [     // 追加
+        //     'tasks' => $tasks,        // 追加
+        // ]);                                 // 追加
     }
 
     /**
@@ -27,12 +40,16 @@ class TasksController extends Controller
      */
     public function create()
     {
-        $task = new Task;
+        if (\Auth::check()) {
+            $task = new Task;
 
-        // メッセージ作成ビューを表示
-        return view('tasks.create', [
-            'task' => $task,
-        ]);
+            // メッセージ作成ビューを表示
+            return view('tasks.create', [
+                'task' => $task,
+            ]);
+        }
+        
+        return redirect('/');
     }
 
     /**
@@ -40,19 +57,26 @@ class TasksController extends Controller
      */
     public function store(Request $request)
     {
-        // バリデーション
-        $request->validate([
-            'status' => 'required|max:10',   // 追加
-            'content' => 'required|max:255',
-        ]);
+        if (\Auth::check()) {
+            // バリデーション
+            $request->validate([
+                'status' => 'required|max:10',   // 追加
+                'content' => 'required|max:255',
+            ]);
 
-        // メッセージを作成
-        $task = new Task;
-        $task->status = $request->status;    // 追加
-        $task->content = $request->content;
-        $task->save();
+            $user = \Auth::user();
 
-        // トップページへリダイレクトさせる
+            // メッセージを作成
+            $task = new Task;
+            $task->status = $request->status;    // 追加
+            $task->content = $request->content;
+            $task->user_id = $user->id;
+            $task->save();
+
+            // トップページへリダイレクトさせる
+            return redirect('/');
+        }
+        
         return redirect('/');
     }
 
@@ -64,6 +88,10 @@ class TasksController extends Controller
         // idの値でメッセージを検索して取得
         $task = Task::findOrFail($id);
 
+        if ($task->user_id !== \Auth::id()) {
+            return redirect('/');
+        }
+        
         // メッセージ詳細ビューでそれを表示
         return view('tasks.show', [
             'task' => $task,
@@ -78,6 +106,10 @@ class TasksController extends Controller
         // idの値でメッセージを検索して取得
         $task = Task::findOrFail($id);
 
+        if ($task->user_id !== \Auth::id()) {
+            return redirect('/');
+        }
+
         // メッセージ編集ビューでそれを表示
         return view('tasks.edit', [
             'task' => $task,
@@ -89,14 +121,19 @@ class TasksController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // idの値でメッセージを検索して取得
+        $task = Task::findOrFail($id);
+        if ($task->user_id !== \Auth::id()) {
+            return redirect('/');
+        }
+
         // バリデーション
         $request->validate([
             'status' => 'required|max:10',   // 追加
             'content' => 'required|max:255',
         ]);
 
-        // idの値でメッセージを検索して取得
-        $task = Task::findOrFail($id);
+        
         $task->status = $request->status;    // 追加
         $task->content = $request->content;
         $task->save();
@@ -112,6 +149,10 @@ class TasksController extends Controller
     {
         // idの値でメッセージを検索して取得
         $task = Task::findOrFail($id);
+        if ($task->user_id !== \Auth::id()) {
+            return redirect('/');
+        }
+
         // メッセージを削除
         $task->delete();
 

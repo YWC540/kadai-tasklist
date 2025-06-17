@@ -16,19 +16,31 @@ use App\Http\Controllers\TasksController;
 */
 
 Route::get('/', function () {
+    return redirect('dashboard');
+});
+
+Route::get('/dashboard', function () {
+    if (Auth::check()) {
+        return redirect()->action([TasksController::class, 'index']);
+    }
+
     return view('dashboard');
 });
-Route::resource('tasks', TasksController::class);
+// Route::get('/',[TasksController::class, 'index'])->middleware(['auth']);
 
-Route::get('/dashboard', [MicropostsController::class, 'index'])->middleware(['auth'])->name('dashboard');
+// Route::resource('tasks', TasksController::class);
+
+// Route::get('/dashboard', function () {
+//     return view('dashboard');
+// })->middleware(['auth'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::resource('users', UsersController::class, ['only' => ['index', 'show']]);
+    // Route::resource('users', UsersController::class, ['only' => ['index', 'show']]);
     //Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     //Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     //Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('microposts', MicropostsController::class, ['only' => ['store', 'destroy']]);
+    Route::resource('tasks', TasksController::class);
 });
 
 require __DIR__.'/auth.php';
